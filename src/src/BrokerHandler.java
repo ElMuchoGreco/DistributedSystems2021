@@ -42,4 +42,8 @@ public class BrokerHandler extends Thread implements Serializable {
             e.printStackTrace();
         }
     }
+
+    public void run(){
+
+    }
 }

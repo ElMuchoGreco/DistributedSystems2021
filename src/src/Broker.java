@@ -10,12 +10,12 @@ import java.util.List;
 
 public class Broker extends Node implements Runnable {
 
-    private static List<Publisher> registeredPublishers = new ArrayList<Publisher>();
-    private static List<Consumer> registeredConsumers = new ArrayList<Consumer>();
-    public static List<Consumer> GetConsumers() {
+    private List<Publisher> registeredPublishers = new ArrayList<Publisher>();
+    private List<Consumer> registeredConsumers = new ArrayList<Consumer>();
+    public List<Consumer> GetConsumers() {
         return registeredConsumers;
     }
-    public static List<Publisher> GetPublishers() {
+    public List<Publisher> GetPublishers() {
         return registeredPublishers;
     }
 
