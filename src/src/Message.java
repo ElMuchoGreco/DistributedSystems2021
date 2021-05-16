@@ -23,6 +23,8 @@ public class Message {
         return videoFile;
     }
 
+    public Message() {}
+
     public void setChannelName(String channelName) {
         this.channelName = channelName;
     }
