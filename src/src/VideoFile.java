@@ -20,6 +20,7 @@ public class VideoFile {
     public ArrayList<String> getHashtags() {
         return hashtags;
     }
+
     public byte[] getData() {
         return data;
     }

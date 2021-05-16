@@ -7,7 +7,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
-public class AppNode extends Node implements Publisher {
+public class AppNode extends Node {
     private String username, password, email, channelName, videoName;
     private int videosPublished, port;
     List<Integer> givenList = Arrays.asList(7654, 8761, 9876);
@@ -211,30 +211,6 @@ public class AppNode extends Node implements Publisher {
             e.printStackTrace();
         }
         return baos.toByteArray();
-    }
-
-    void connectAndNotifyBrokers() {
-        int port = 7654;
-        int port2 = 8760;
-        int port3 = 9876;
-        List<Integer> ports = new ArrayList<Integer>();
-        ports.add(port);
-        ports.add(port2);
-        ports.add(port3);
-        for (Integer thePort : ports) {
-            try {
-                requestSocket = new Socket("192.168.2.2", thePort);
-                out = new ObjectOutputStream(requestSocket.getOutputStream());
-                System.out.println("Connection Established!");
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            try {
-                out.writeObject(this.message);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
     }
 
     public synchronized void push() {

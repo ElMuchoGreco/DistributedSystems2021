@@ -111,7 +111,7 @@ public class AppNodeHandler extends Node implements Runnable {
                 this.consumer.setPort(message.port);
                 System.out.println("Server Changed");
             } else {
-                System.out.println(message.getVideoFile());
+                System.out.println(message.getVideoFile().getVideoName());
                 VideoFile tempMusicFile = new VideoFile();
                 int i=0;
                 while (true){
@@ -165,7 +165,6 @@ public class AppNodeHandler extends Node implements Runnable {
     public void run() {
         connectAndNotifyBrokers();
         openServer();
-        connect(port);
         System.out.println("Running...");
     }
 
