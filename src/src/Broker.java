@@ -10,12 +10,12 @@ import java.util.List;
 
 public class Broker extends Node implements Runnable {
 
-    private List<Publisher> registeredPublishers = new ArrayList<Publisher>();
-    private List<Consumer> registeredConsumers = new ArrayList<Consumer>();
-    public List<Consumer> GetConsumers() {
+    private List<AppNode> registeredPublishers = new ArrayList<AppNode>();
+    private List<AppNode> registeredConsumers = new ArrayList<AppNode>();
+    public List<AppNode> GetConsumers() {
         return registeredConsumers;
     }
-    public List<Publisher> GetPublishers() {
+    public List<AppNode> GetPublishers() {
         return registeredPublishers;
     }
 
@@ -38,10 +38,8 @@ public class Broker extends Node implements Runnable {
 
     public void run() {
         calculateKeys();
-
         Node.getBrokers().add(this);
         Node.setMinMax();
-
         openServer();
     }
 
@@ -89,17 +87,15 @@ public class Broker extends Node implements Runnable {
         }
         System.out.println("Client connected.");
     }
+
     Socket getConnection() {
         return this.connection;
     }
 
 
     public static void main(String[] args) {
-
         new Thread(new Broker(7654,"First","192.168.2.2")).start();
         new Thread(new Broker(8761,"Second","192.168.2.2")).start();
         new Thread(new Broker(9876,"Third","192.168.2.2")).start();
-
-
     }
 }

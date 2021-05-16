@@ -1,14 +1,147 @@
 import java.io.*;
+import java.net.InetAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Random;
 
-public class AppNode extends Node implements Publisher, Consumer{
-    private String username, password, email, channelName;
-    private int videosPublished;
+public class AppNode extends Node implements Publisher {
+    private String username, password, email, channelName, videoName;
+    private int videosPublished, port;
+    List<Integer> givenList = Arrays.asList(7654, 8761, 9876);
+    private Message message;
     private ArrayList<VideoFile> videos = new ArrayList<>();
     private ArrayList<String> hashtags = new ArrayList<>();
+    private boolean isPublisher;
+    InetAddress ip;
+    Socket connection;
+    ObjectInputStream in;
+
+    public String getChannelName() {
+        return channelName;
+    }
+
+    public void setChannelName(String channelName) {
+        this.channelName = channelName;
+    }
+
+    public String getVideoName() {
+        return videoName;
+    }
+
+    public void setVideoName(String videoName) {
+        this.videoName = videoName;
+    }
+
+    public int getPort() {
+        return port;
+    }
+
+    public void setPort(int port) {
+        this.port = port;
+    }
+
+    public List<Integer> getGivenList() {
+        return givenList;
+    }
+
+    public void setGivenList(List<Integer> givenList) {
+        this.givenList = givenList;
+    }
+
+    public Message getMessage() {
+        return message;
+    }
+
+    public void setMessage(Message message) {
+        this.message = message;
+    }
+
+    public void setVideos(ArrayList<VideoFile> videos) {
+        this.videos = videos;
+    }
+
+    public ArrayList<String> getHashtags() {
+        return hashtags;
+    }
+
+    public void setHashtags(ArrayList<String> hashtags) {
+        this.hashtags = hashtags;
+    }
+
+    public InetAddress getIp() {
+        return ip;
+    }
+
+    public void setIp(InetAddress ip) {
+        this.ip = ip;
+    }
+
+    public Socket getConnection() {
+        return connection;
+    }
+
+    public void setConnection(Socket connection) {
+        this.connection = connection;
+    }
+
+    public Socket getRequestSocket() {
+        return requestSocket;
+    }
+
+    public void setRequestSocket(Socket requestSocket) {
+        this.requestSocket = requestSocket;
+    }
+
+    public static int getChunkSize() {
+        return CHUNK_SIZE;
+    }
+
+    public ObjectInputStream getIn() {
+        return in;
+    }
+
+    public void setIn(ObjectInputStream in) {
+        this.in = in;
+    }
+
+    public ObjectOutputStream getOut() {
+        return out;
+    }
+
+    public void setOut(ObjectOutputStream out) {
+        this.out = out;
+    }
+
+    public ServerSocket getProviderSocket() {
+        return providerSocket;
+    }
+
+    public void setProviderSocket(ServerSocket providerSocket) {
+        this.providerSocket = providerSocket;
+    }
+
+    ObjectOutputStream out;
+    ServerSocket providerSocket;
+    Socket Connection;
+    Socket requestSocket;
+    private static final int CHUNK_SIZE = 64000;
 
     public AppNode() {
         this.hashtags = setHashtags();
+    }
+
+    public AppNode(String channelName, String videoName, boolean isPublisher) {
+        this.isPublisher = isPublisher;
+        this.channelName = channelName;
+        this.videoName = videoName;
+        Random rand = new Random();
+        if(!isPublisher) {
+            this.port = givenList.get(rand.nextInt(givenList.size()));
+            this.message = new Message(channelName, this, videoName);
+        }
     }
 
     private ArrayList<String> setHashtags() {
@@ -37,6 +170,18 @@ public class AppNode extends Node implements Publisher, Consumer{
         return videosPublished;
     }
 
+    public ArrayList<VideoFile> getVideos() {
+        return videos;
+    }
+
+    public boolean isPublisher() {
+        return isPublisher;
+    }
+
+    public void setPublisher(boolean set) {
+        isPublisher = set;
+    }
+
     public void setEmail(String email) {
         this.email = email;
     }
@@ -53,68 +198,114 @@ public class AppNode extends Node implements Publisher, Consumer{
         this.videosPublished = videosPublished;
     }
 
-    public void push() {
+    public static byte[] inputStreamToByteArray(InputStream inStream) {
 
-    }
-
-    public void pull() {
-
-    }
-
-    public ArrayList<Value> generateChunks(String path, String video_name) {
-
-        ArrayList<Value> chunks = new ArrayList<>();
-
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        byte[] buffer = new byte[8192];
+        int bytesRead;
         try {
-            File file = new File(path + video_name);//File read from Source folder to Split.
-            if (file.exists()) {
-
-                String videoFileName = file.getName().substring(0, file.getName().lastIndexOf(".")); // Name of the videoFile without extension
-                File splitFile = new File(path + "Videos_Split");//Destination folder to save.
-                if (!splitFile.exists()) {
-                    splitFile.mkdirs();
-                    System.out.println("Directory Created -> "+ splitFile.getAbsolutePath());
-                }
-
-                int i = 1;// Files count starts from 1
-                InputStream inputStream = new FileInputStream(file);
-                String videoFile = splitFile.getAbsolutePath() +"/"+ String.format("%02d", i) +"_"+ file.getName();// Location to save the files which are Split from the original file.
-                OutputStream outputStream = new FileOutputStream(videoFile);
-                System.out.println("File Created Location: "+ videoFile);
-                chunks.add(new Value(new VideoFile(videoFile, "", "")));
-                int totalPartsToSplit = 3;// Total files to split.
-                int splitSize = inputStream.available() / totalPartsToSplit;
-                int streamSize = 0;
-                int read = 0;
-                while ((read = inputStream.read()) != -1) {
-
-                    if (splitSize == streamSize) {
-                        if (i != totalPartsToSplit) {
-                            i++;
-                            String fileCount = String.format("%02d", i); // output will be 1 is 01, 2 is 02
-                            videoFile = splitFile.getAbsolutePath() +"/"+ fileCount +"_"+ file.getName();
-                            chunks.add(new Value(new VideoFile(videoFile, "", "")));
-                            outputStream = new FileOutputStream(videoFile);
-                            System.out.println("File Created Location: "+ videoFile);
-                            streamSize = 0;
-                        }
-                    }
-                    outputStream.write(read);
-                    streamSize++;
-                }
-
-                inputStream.close();
-                outputStream.close();
-                System.out.println("Total files Split ->"+ totalPartsToSplit);
-            } else {
-                System.err.println(file.getAbsolutePath() +" File Not Found.");
+            while ((bytesRead = inStream.read(buffer)) > 0) {
+                baos.write(buffer, 0, bytesRead);
             }
-        } catch (Exception e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
-        for (Value chunk : chunks) {
-            System.out.println(chunk.videoFile.videoPath);
+        return baos.toByteArray();
+    }
+
+    void connectAndNotifyBrokers() {
+        int port = 7654;
+        int port2 = 8760;
+        int port3 = 9876;
+        List<Integer> ports = new ArrayList<Integer>();
+        ports.add(port);
+        ports.add(port2);
+        ports.add(port3);
+        for (Integer thePort : ports) {
+            try {
+                requestSocket = new Socket("192.168.2.2", thePort);
+                out = new ObjectOutputStream(requestSocket.getOutputStream());
+                System.out.println("Connection Established!");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            try {
+                out.writeObject(this.message);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
-        return chunks;
+    }
+
+    public synchronized void push() {
+
+        VideoFile video = null;
+        Message tempmsg = null;
+
+        try {
+            video = new VideoFile("", "skyrim.mp4", "mike", inputStreamToByteArray(new FileInputStream(new File("", "skyrim.mp4"))));
+
+            try {
+                for (int i = 0; i <= video.getData().length / CHUNK_SIZE; i++) {
+                    byte[] chunk = extractByteChunk(i, video.getData());
+                    tempmsg = new Message(chunk);
+                    out.writeObject(tempmsg);
+                    Thread.sleep(1000);
+                    System.out.println("CHUNK :" + tempmsg.toString() + " Sent");
+                }
+                tempmsg = new Message("END");
+                tempmsg.setTransfer(false);
+                out.writeObject(tempmsg);
+                System.out.println("\n\nVideo Sent");
+            } catch (FileNotFoundException ex) {
+                System.err.println("File Not Found!!!");
+                tempmsg = new Message("File not found");
+                tempmsg.setTransfer(false);
+                try {
+                    out.writeObject(tempmsg);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            } catch (NullPointerException e) {
+                e.printStackTrace();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        } catch (FileNotFoundException ex) {
+            System.err.println("File Not Found!!!");
+            tempmsg = new Message("File not found");
+            tempmsg.setTransfer(false);
+            try {
+                out.writeObject(tempmsg);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        } catch (NullPointerException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void Register(Broker broker, String channelName) {
+        broker.GetConsumers().add(this);
+        System.out.println(channelName);
+    }
+
+    public byte[] extractByteChunk(int i, byte[] song) {
+        byte[] chunk;
+        if (i < song.length / CHUNK_SIZE) {
+            chunk = new byte[CHUNK_SIZE];
+            for (int j = 0; j < CHUNK_SIZE; j++) {
+                chunk[j] = song[(i * CHUNK_SIZE) + j];
+            }
+        } else {
+            chunk = new byte[song.length - ((i) * CHUNK_SIZE)];
+            for (int j = 0; j < song.length - ((i) * CHUNK_SIZE); j++) {
+                chunk[j] = song[(i * CHUNK_SIZE) + j];
+            }
+        }
+        return chunk;
     }
 }
+
